@@ -18,7 +18,7 @@ sqlx = { version = "0.7.4", features = ["postgres", "runtime-tokio", "time"] }
 thiserror = "1.0.58"
 time = { version = "0.3.36", features = ["serde"] }
 tokio = { version = "1.37.0", features = ["full"] }
-totp-rs = { version = "5.5.1", features = ["otpauth"] }
+# totp-rs = { version = "5.5.1", features = ["otpauth"] }
 tower = { version = "0.4.13", features = ["util"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }

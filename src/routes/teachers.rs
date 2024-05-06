@@ -49,7 +49,7 @@ async fn fetch(
 
     let teachers = sqlx::query_as::<_, Teacher>(
         r#"
-            SELECT *, (mfa_secret IS NOT NULL) as mfa FROM Teachers
+            SELECT * FROM Teachers
             JOIN Employees ON Employees.id = Teachers.employee_id
             WHERE
                 coalesce(id = $3, true) AND
@@ -116,7 +116,7 @@ async fn create(
             INSERT INTO Employees(first_name, last_name, middle_name, phone, password_hash, role)
             VALUES (
                 $1, $2, $3, $4, $5, 'teacher'
-            ) RETURNING *, (mfa_secret IS NOT NULL) as mfa
+            ) RETURNING *
         "#,
     )
     .bind(first_name)
@@ -176,8 +176,6 @@ struct UpdateTeacherRequest {
     room_id: Option<i32>,
     phone: String,
     password: Option<String>,
-    #[serde(default)]
-    remove_mfa: bool,
 }
 
 /// Update teacher with id
@@ -201,7 +199,6 @@ async fn update(
         room_id,
         phone,
         password,
-        remove_mfa,
     } = data;
 
     let password_hash = password.map(|pass| {
@@ -220,13 +217,9 @@ async fn update(
                 last_name = $3,
                 middle_name = $4,
                 phone = $5,
-                password_hash = coalesce($6, password_hash),
-                mfa_secret = CASE
-                    WHEN $7=true THEN NULL
-                    WHEN $7=false THEN mfa_secret
-                END
+                password_hash = coalesce($6, password_hash)
             WHERE id = $1 AND role = 'teacher'
-            RETURNING *, (mfa_secret IS NOT NULL) as mfa
+            RETURNING *
         "#,
     )
     .bind(id)
@@ -235,7 +228,6 @@ async fn update(
     .bind(middle_name)
     .bind(phone)
     .bind(password_hash)
-    .bind(remove_mfa)
     .fetch_optional(&mut *tx)
     .await;
 

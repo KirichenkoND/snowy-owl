@@ -42,7 +42,7 @@ async fn fetch(
 
     let results = sqlx::query_as::<_, Employee>(
         "
-            SELECT *, (mfa_secret IS NOT NULL) as mfa FROM Employees
+            SELECT * FROM Employees
             WHERE
                 coalesce(first_name || last_name || coalesce(middle_name, '') ILIKE ('%' || $3 || '%'), true) AND
                 coalesce(id = $4, true) AND
@@ -90,7 +90,7 @@ async fn create(
         "INSERT INTO Employees(first_name, last_name, middle_name, phone, password_hash, role) VALUES(
             $1, $2, $3,
             $4, $5, 'principal'
-        ) RETURNING *, false AS mfa",
+        ) RETURNING *",
     )
     .bind(first_name)
     .bind(last_name)
@@ -119,8 +119,6 @@ struct UpdatePrincipalRequest {
     middle_name: Option<String>,
     phone: String,
     password: Option<String>,
-    #[serde(default)]
-    remove_mfa: bool,
 }
 
 async fn update(
@@ -134,7 +132,6 @@ async fn update(
         middle_name,
         phone,
         password,
-        remove_mfa,
     } = data;
 
     let password_hash = password.map(|pass| {
@@ -151,13 +148,9 @@ async fn update(
             last_name = $3,
             middle_name = $4,
             phone = $5,
-            password_hash = coalesce($6, password_hash),
-            mfa_secret = CASE
-                WHEN $7=true THEN NULL
-                WHEN $7=false THEN mfa_secret
-            END
+            password_hash = coalesce($6, password_hash)
             WHERE id = $1
-            RETURNING *, (mfa_secret IS NOT NULL) AS mfa
+            RETURNING *
         ",
     )
     .bind(id)
@@ -166,7 +159,6 @@ async fn update(
     .bind(middle_name)
     .bind(phone)
     .bind(password_hash)
-    .bind(remove_mfa)
     .fetch_optional(&state.db)
     .await;
 

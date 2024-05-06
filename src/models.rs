@@ -35,7 +35,6 @@ pub struct Employee {
     #[serde(with = "time::serde::rfc3339")]
     pub employed_at: OffsetDateTime,
     pub phone: String,
-    pub mfa: bool,
     pub role: Role,
 }
 

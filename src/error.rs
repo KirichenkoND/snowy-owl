@@ -23,10 +23,6 @@ pub enum Error {
     #[error("{}", .0.body_text())]
     PathRejection(#[from] axum::extract::rejection::PathRejection),
 
-    #[error("Необходима двухвакторная авторизация")]
-    #[allow(dead_code)]
-    Mfa,
-
     #[error("{message}")]
     Custom {
         field: Option<&'static str>,
@@ -42,8 +38,7 @@ impl Error {
             Error::Jwt(_)
             | Error::PathRejection(_)
             | Error::JsonRejection(_)
-            | Error::QueryRejection(_)
-            | Error::Mfa => StatusCode::BAD_REQUEST,
+            | Error::QueryRejection(_) => StatusCode::BAD_REQUEST,
             Error::Custom { status, .. } => *status,
         }
     }
@@ -62,7 +57,6 @@ impl IntoResponse for Error {
 
         let field = match self {
             Error::Custom { field, .. } => field.map(ToOwned::to_owned),
-            Error::Mfa => Some("2fa".to_owned()),
             _ => None,
         };
 
