@@ -42,6 +42,8 @@ CREATE TABLE Students(
     middle_name VARCHAR(32),
     enrolled_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     class_id INTEGER NOT NULL REFERENCES Classes,
+    phone VARCHAR(16) NOT NULL UNIQUE,
+    password_hash VARCHAR(128) NOT NULL,
 
     UNIQUE (first_name, last_name, middle_name, class_id)
 );
@@ -56,3 +58,19 @@ CREATE TABLE Marks(
 
     CHECK (mark BETWEEN 2 AND 5)
 );
+
+CREATE TABLE Parents(
+    id SERIAL PRIMARY KEY,
+    first_name VARCHAR(32) NOT NULL,
+    last_name VARCHAR(32) NOT NULL,
+    middle_name VARCHAR(32),
+    phone VARCHAR(16) NOT NULL UNIQUE,
+    password_hash VARCHAR(128) NOT NULL
+);
+
+CREATE TABLE ParentStudent(
+    student_id INTEGER REFERENCES Students,
+    parent_id INTEGER REFERENCES Parents,
+
+    PRIMARY KEY(student_id, parent_id)
+)

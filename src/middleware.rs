@@ -7,12 +7,12 @@ use time::OffsetDateTime;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    #[serde(rename = "eid")]
-    pub employee_id: i32,
-    #[serde(rename = "r")]
-    pub role: Role,
     #[serde(rename = "exp", with = "time::serde::timestamp")]
     pub expires_at: OffsetDateTime,
+    #[serde(rename = "aud")]
+    pub role: Role,
+    #[serde(rename = "jti")]
+    pub employee_id: i32,
 }
 
 #[axum::async_trait]

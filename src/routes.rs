@@ -6,6 +6,7 @@ use axum::{
 use serde::Serialize;
 use serde_json::json;
 
+pub mod auth;
 pub mod classes;
 pub mod marks;
 pub mod principals;
