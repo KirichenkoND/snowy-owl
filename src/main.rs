@@ -86,6 +86,7 @@ async fn main() -> Result<(), error::Error> {
     openapi.merge(routes::students::openapi());
     openapi.merge(routes::teachers::openapi());
     openapi.merge(routes::marks::openapi());
+    openapi.merge(routes::auth::openapi());
 
     let app = Router::new()
         .nest("/subjects", routes::subjects::router())
@@ -95,6 +96,7 @@ async fn main() -> Result<(), error::Error> {
         .nest("/teachers", routes::teachers::router())
         .nest("/principals", routes::principals::router())
         .nest("/marks", routes::marks::router())
+        .nest("/auth", routes::auth::router())
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", openapi))
         .with_state(state);
 
