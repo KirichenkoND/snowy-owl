@@ -1,9 +1,14 @@
 use super::{Json, Query, RouteResult, RouteState};
-use crate::{models::Mark, AppState};
+use crate::{
+    fail,
+    middleware::Claims,
+    models::{Mark, Role},
+    AppState,
+};
 use axum::{extract::State, routing::*};
 use serde::Deserialize;
 use time::OffsetDateTime;
-use utoipa::{IntoParams, OpenApi};
+use utoipa::{IntoParams, OpenApi, ToSchema};
 
 #[derive(Deserialize, IntoParams)]
 #[serde(deny_unknown_fields)]
@@ -78,14 +83,65 @@ async fn fetch(
     Ok(Json(marks))
 }
 
+#[derive(Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+struct CreateMarkRequest {
+    teacher_id: Option<i32>,
+    student_id: i32,
+    subject_id: i32,
+    mark: i8,
+}
+
+/// Create a new mark
+/// If authenticated as a principal, teacher_id is required
+#[utoipa::path(
+    post,
+    path = "/marks",
+    tag = "Marks management",
+    request_body = CreateMarkRequest,
+    responses((status = 200))
+)]
+async fn create(
+    State(state): RouteState,
+    claims: Claims,
+    Json(data): Json<CreateMarkRequest>,
+) -> RouteResult {
+    let CreateMarkRequest {
+        teacher_id,
+        student_id,
+        subject_id,
+        mark,
+    } = data;
+
+    let teacher_id = match claims.role {
+        Role::Teacher => claims.employee_id,
+        Role::Principal => teacher_id.ok_or(fail!(BAD_REQUEST, "teacher_id is required"))?,
+    };
+
+    sqlx::query(
+        "
+            INSERT INTO Marks(teacher_id, student_id, subject_id, mark)
+            VALUES($1, $2, $3, $4)
+        ",
+    )
+    .bind(teacher_id)
+    .bind(student_id)
+    .bind(subject_id)
+    .bind(mark)
+    .execute(&state.db)
+    .await?;
+
+    Ok(())
+}
+
 pub fn openapi() -> utoipa::openapi::OpenApi {
     #[derive(OpenApi)]
-    #[openapi(paths(fetch), components(schemas(Mark)))]
+    #[openapi(paths(fetch, create), components(schemas(Mark, CreateMarkRequest)))]
     struct Api;
 
     Api::openapi()
 }
 
 pub fn router() -> Router<AppState> {
-    Router::new().route("/", get(fetch))
+    Router::new().route("/", get(fetch).post(create))
 }

@@ -22,7 +22,7 @@ struct LoginRequest {
 
 /// Login as an employee
 #[utoipa::path(
-    get,
+    post,
     path = "/login",
     tag = "Authentication",
     request_body = LoginRequest,
