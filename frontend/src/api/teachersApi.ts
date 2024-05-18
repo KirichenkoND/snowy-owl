@@ -4,9 +4,14 @@ import { API_BASE_URL } from '../config';
 
 export interface ITeacher {
     id: number;
-    name: string;
-    subject_ids: number[];
-    room_ids: number[];
+    first_name: string;
+    last_name: string;
+    middle_name?: string;
+    phone: string;
+    room_id: number;
+    subject_id: number;
+    employed_at: string;
+    role: string;
 }
 
 export interface ITeacherResponse {
@@ -15,9 +20,12 @@ export interface ITeacherResponse {
 }
 
 export interface ICreateOrUpdateTeacherRequest {
-    name: string;
-    subject_ids: number[];
-    room_ids: number[];
+    first_name: string;
+    last_name: string;
+    middle_name?: string;
+    phone: string;
+    room_id: number;
+    subject_id: number;
 }
 
 export const teachersApi = createApi({

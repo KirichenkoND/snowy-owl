@@ -10,7 +10,7 @@ import { useGetSubjectsQuery } from '../../api/subjectsApi';
 import { Alert, Snackbar } from '@mui/material';
 
 const RoomsComponent: React.FC = () => {
-    const { data: response, isLoading: roomsLoading, isError: roomsError, isSuccess: roomsSuccess, refetch } = useGetRoomsQuery({ id: 1});
+    const { data: response, isLoading: roomsLoading, isError: roomsError, isSuccess: roomsSuccess, refetch } = useGetRoomsQuery({ });
     const rooms = response?.data || [];
 
     const { data: subjectsResponse, isLoading: subjectsLoading, isError: subjectsError } = useGetSubjectsQuery();

@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 export interface IUserSlice {
-    role: null | "Teacher" | "admin"
+    role: null | "Teacher" | "Principal" | "Student"
 }
 
 const initialState = {role: null} satisfies IUserSlice as IUserSlice
@@ -13,8 +13,8 @@ export const userSlice = createSlice({
         setTeacherState: (state) => {
             state.role = "Teacher"
         },
-        setAdminState: (state) => {
-            state.role = "admin"
+        setPrincipalState: (state) => {
+            state.role = "Principal"
         },
         setUser: (state, action) => {
             state.role = action.payload.role;
@@ -25,5 +25,5 @@ export const userSlice = createSlice({
     }
 })
 
-export const {setTeacherState, setAdminState, setUser, logoutUser} = userSlice.actions;
+export const {setTeacherState, setPrincipalState, setUser, logoutUser} = userSlice.actions;
 export default userSlice.reducer;
