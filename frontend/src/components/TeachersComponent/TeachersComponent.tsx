@@ -15,7 +15,7 @@ const TeachersComponent: React.FC = () => {
     const { data: response, isLoading, isError, isSuccess, refetch } = useGetTeachersQuery({});
     const teachers = response?.data || [];
 
-    const { data: roomsResponse } = useGetRoomsQuery({ id: 1 });
+    const { data: roomsResponse } = useGetRoomsQuery({});
     const rooms = roomsResponse?.data || [];
 
     const { data: subjectsResponse } = useGetSubjectsQuery({});
@@ -268,15 +268,15 @@ const TeachersComponent: React.FC = () => {
                                         <option key={subject.id} value={subject.id}>{subject.name}</option>
                                     ))}
                                 </select>
-                                <button onClick={() => handleUpdateTeacher(teacher.id)}>Сохранить</button>
-                                <button onClick={() => handleCancelClick(teacher.id)}>Отмена</button>
+                                <button onClick={() => handleUpdateTeacher(teacher.id)}>Save</button>
+                                <button onClick={() => handleCancelClick(teacher.id)}>Cancel</button>
                             </>
                         ) : (
                             <>
                                 {teacher.first_name} {teacher.last_name} {teacher.middle_name}
                                 <div>
-                                    Room: {rooms.find(room => room.id === teacher.room_ids)?.name || 'N/A'},
-                                    Subject: {subjects.find(subject => subject.id === teacher.subject_ids)?.name || 'N/A'}
+                                    Room: {rooms.find(room => room.id === teacher.room_id)?.name || 'N/A'},
+                                    Subject: {subjects.find(subject => subject.id === teacher.subject_id)?.name || 'N/A'}
                                 </div>
                                 <button onClick={() => handleEditClick(teacher.id)}>Update</button>
                                 <button onClick={() => handleDeleteTeacher(teacher.id)}>Delete</button>

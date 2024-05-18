@@ -14,7 +14,7 @@ import { RootState } from '../../store/store';
 
 const NavigationCardList = [
     {
-        access: ["admin", "Teacher"],
+        access: ["Principal", "Teacher"],
         imageUrl: test_1,
         title: "Авторизация",
         link: "/auth",
@@ -26,37 +26,37 @@ const NavigationCardList = [
         link: "/classes",
     },
     {
-        access: ["admin", "Teacher"],
+        access: ["Principal", "Teacher"],
         imageUrl: test_3,
         title: "Предметы",
         link: "/subjects",
     },
     {
-        access: ["admin", "Teacher"],
+        access: ["Principal"],
         imageUrl: test_4,
         title: "Аудитории",
         link: "/rooms",
     },
     {
-        access: ["admin", "Teacher"],
+        access: ["Principal"],
         imageUrl: test_5,
         title: "Учителя",
         link: "/teachers",
     },
     {
-        access: ["admin", "Teacher"],
+        access: ["Principal", "Teacher"],
         imageUrl: test_5,
         title: "Студенты",
         link: "/students",
     },
     {
-        access: ["admin", "Teacher"],
+        access: ["Principal", "Teacher"],
         imageUrl: test_5,
         title: "Оценки",
         link: "/marks",
     },
     {
-        access: ["Teacher"],
+        access: ["Principal"],
         imageUrl: test_6,
         title: "Настройки",
         link: "/settings",
@@ -87,7 +87,7 @@ const MainPage: React.FC = () => {
                                 />
                             );
                         }
-                        return null; // Необходимо возвращать null, если условие не выполнено
+                        return null; 
                     })}
             </div>
         </>

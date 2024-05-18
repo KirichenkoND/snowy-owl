@@ -12,6 +12,15 @@ export interface ILoginResponse {
     success: boolean;
 }
 
+export interface IProfile {
+    id: number;
+    first_name: string;
+    last_name: string;
+    phone: string;
+    role: string;
+    employed_at: string;
+}
+
 export const authApi = createApi({
     reducerPath: 'authApi',
     baseQuery: fetchBaseQuery({ baseUrl: API_BASE_URL }),
@@ -28,8 +37,11 @@ export const authApi = createApi({
                 url: '/logout',
                 method: 'POST'
             }),
-        })
+        }),
+        me: builder.query<IProfile, void>({
+            query: () => `auth/me`,
+        }),
     }),
 })
 
-export const { useLoginMutation, useLogoutMutation } = authApi;
+export const { useLoginMutation, useLogoutMutation, useMeQuery } = authApi;

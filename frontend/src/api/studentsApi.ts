@@ -8,6 +8,7 @@ export interface IStudent {
     last_name: string;
     middle_name: string;
     class_id: number;
+    phone: string;
 }
 
 export interface IStudentResponse {
@@ -20,6 +21,8 @@ export interface ICreateOrUpdateStudentRequest {
     last_name: string;
     middle_name: string;
     class_id: number;
+    password: string;
+    phone: string;
 }
 
 export const studentsApi = createApi({

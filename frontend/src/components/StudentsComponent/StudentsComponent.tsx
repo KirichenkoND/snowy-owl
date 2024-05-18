@@ -21,7 +21,9 @@ const StudentsComponent: React.FC = () => {
         first_name: '',
         last_name: '',
         middle_name: '',
-        class_id: 0
+        class_id: 0,
+        password: '',
+        phone: ''
     });
 
     const [editStudentData, setEditStudentData] = useState<{ [id: number]: any }>({});
@@ -43,6 +45,7 @@ const StudentsComponent: React.FC = () => {
                     last_name: curr.last_name,
                     middle_name: curr.middle_name,
                     class_id: curr.class_id,
+                    phone: curr.phone
                 };
                 return acc;
             }, {} as { [id: number]: any }));
@@ -60,7 +63,9 @@ const StudentsComponent: React.FC = () => {
                 first_name: '',
                 last_name: '',
                 middle_name: '',
-                class_id: 0
+                class_id: 0,
+                password: '',
+                phone: ''
             });
             refetch();
             setError(null);
@@ -75,8 +80,8 @@ const StudentsComponent: React.FC = () => {
 
     const handleUpdateStudent = async (id: number) => {
         try {
-            const { first_name, last_name, middle_name, class_id } = editStudentData[id];
-            await updateStudent({ id, data: { first_name, last_name, middle_name, class_id } }).unwrap();
+            const { first_name, last_name, middle_name, class_id, phone } = editStudentData[id];
+            await updateStudent({ id, data: { first_name, last_name, middle_name, class_id, phone, password: '' } }).unwrap();
             setIsEditing({ ...isEditing, [id]: false });
             refetch();
             setError(null);
@@ -158,6 +163,18 @@ const StudentsComponent: React.FC = () => {
                         onChange={(e) => setNewStudent({ ...newStudent, middle_name: e.target.value })}
                         placeholder="Middle Name"
                     />
+                    <input
+                        type="password"
+                        value={newStudent.password}
+                        onChange={(e) => setNewStudent({ ...newStudent, password: e.target.value })}
+                        placeholder="Password"
+                    />
+                    <input
+                        type="text"
+                        value={newStudent.phone}
+                        onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })}
+                        placeholder="Phone"
+                    />
                     <select
                         value={newStudent.class_id}
                         onChange={(e) => setNewStudent({ ...newStudent, class_id: Number(e.target.value) })}
@@ -201,6 +218,15 @@ const StudentsComponent: React.FC = () => {
                                         [student.id]: { ...editStudentData[student.id], middle_name: e.target.value }
                                     })}
                                     placeholder="Middle Name"
+                                />
+                                <input
+                                    type="text"
+                                    value={editStudentData[student.id]?.phone || ''}
+                                    onChange={(e) => setEditStudentData({
+                                        ...editStudentData,
+                                        [student.id]: { ...editStudentData[student.id], phone: e.target.value }
+                                    })}
+                                    placeholder="Phone"
                                 />
                                 <select
                                     value={editStudentData[student.id]?.class_id || 0}

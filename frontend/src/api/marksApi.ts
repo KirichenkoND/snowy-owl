@@ -38,10 +38,22 @@ export const marksApi = createApi({
             count?: number;
             offset?: number;
         }>({
-            query: (params) => ({
-                url: 'marks',
-                params,
-            }),
+            query: (params) => {
+                const queryParams = new URLSearchParams();
+                for (const key in params) {
+                    if (Array.isArray(params[key])) {
+                        params[key].forEach((value: number) => {
+                            queryParams.append(key, value.toString());
+                        });
+                    } else {
+                        queryParams.append(key, params[key] as string);
+                    }
+                }
+                return {
+                    url: 'marks',
+                    params: queryParams.toString(),
+                };
+            },
         }),
         createMark: builder.mutation<IMark, ICreateMarkRequest>({
             query: (newMark) => ({
@@ -54,6 +66,7 @@ export const marksApi = createApi({
 });
 
 export const {
+    useLazyGetMarksQuery,
     useGetMarksQuery,
     useCreateMarkMutation,
 } = marksApi;

@@ -18,9 +18,7 @@ const AuthComponent: React.FC = () => {
             const userData = await login({ phone, password }).unwrap();
             setError(null);
             setSnackbarOpen(true);
-            console.log("User Data:", userData); // Отладочное сообщение
             dispatch(setUser({ phone, role: "Teacher" }));
-            console.log("Dispatched setUser with role: Teacher"); // Отладочное сообщение
         } catch (error) {
             if ((error as { data: { message: string } })?.data?.message) {
                 setError((error as { data: { message: string } }).data.message);

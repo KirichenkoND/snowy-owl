@@ -1,7 +1,7 @@
 // src/components/ClassesComponent.tsx
 import React, { useEffect, useState } from 'react';
 import { useGetClassesQuery, useUpdateClassMutation, useDeleteClassMutation, useCreateClassMutation } from '../../api/classesApi';
-import { Alert, CircularProgress, Snackbar } from '@mui/material';
+import { Alert, CircularProgress, Snackbar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField } from '@mui/material';
 
 const ClassesComponent: React.FC = () => {
     const { data: response, isLoading, isError, isSuccess, refetch } = useGetClassesQuery({});
@@ -100,39 +100,63 @@ const ClassesComponent: React.FC = () => {
                     {error ? error : "Operation successful"}
                 </Alert>
             </Snackbar>
-            <input
-                type="text"
+            <TextField
+                label="New Class Name"
                 value={newClassName}
                 onChange={(e) => setNewClassName(e.target.value)}
-                placeholder="New Class Name"
+                variant="outlined"
+                fullWidth
+                margin="normal"
             />
-            <button onClick={handleCreateClass}>Create Class</button>
-            <ul>
-                {classes.map((classItem) => (
-                    <li key={classItem.id}>
-                        {isEditing[classItem.id] ? (
-                            <>
-                                <input
-                                    type="text"
-                                    value={editClassNames[classItem.id]}
-                                    onChange={(e) => setEditClassNames({
-                                        ...editClassNames,
-                                        [classItem.id]: e.target.value
-                                    })}
-                                />
-                                <button onClick={() => handleUpdateClass(classItem.id)}>Сохранить</button>
-                                <button onClick={() => handleCancelClick(classItem.id)}>Отмена</button>
-                            </>
-                        ) : (
-                            <>
-                                {classItem.name}
-                                <button onClick={() => handleEditClick(classItem.id)}>Update</button>
-                                <button onClick={() => handleDeleteClass(classItem.id)}>Delete</button>
-                            </>
-                        )}
-                    </li>
-                ))}
-            </ul>
+            <Button variant="contained" color="primary" onClick={handleCreateClass}>Create Class</Button>
+           
+            <div style={{ margin: '5%' }}>
+                <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Name</TableCell>
+                                <TableCell align="right">Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {classes.map((classItem) => (
+                                <TableRow key={classItem.id}>
+                                    <TableCell>
+                                        {isEditing[classItem.id] ? (
+                                            <TextField
+                                                value={editClassNames[classItem.id]}
+                                                onChange={(e) => setEditClassNames({
+                                                    ...editClassNames,
+                                                    [classItem.id]: e.target.value
+                                                })}
+                                                variant="outlined"
+                                                fullWidth
+                                            />
+                                        ) : (
+                                            classItem.name
+                                        )}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {isEditing[classItem.id] ? (
+                                            <>
+                                                <Button onClick={() => handleUpdateClass(classItem.id)} variant="contained" color="primary" sx={{ marginRight: 1 }}>Save</Button>
+                                                <Button onClick={() => handleCancelClick(classItem.id)} variant="outlined">Cancel</Button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Button onClick={() => handleEditClick(classItem.id)} variant="contained" color="primary" sx={{ marginRight: 1 }}>Update</Button>
+                                                <Button onClick={() => handleDeleteClass(classItem.id)} variant="contained" color="secondary">Delete</Button>
+                                            </>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </div>
+            
         </div>
     );
 };
