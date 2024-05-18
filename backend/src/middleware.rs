@@ -9,9 +9,9 @@ use time::OffsetDateTime;
 pub struct Claims {
     #[serde(rename = "exp", with = "time::serde::timestamp")]
     pub expires_at: OffsetDateTime,
-    #[serde(rename = "aud")]
+    #[serde(rename = "xrl")]
     pub role: Role,
-    #[serde(rename = "jti")]
+    #[serde(rename = "eid")]
     pub employee_id: i32,
 }
 

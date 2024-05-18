@@ -136,6 +136,18 @@ async fn create(
                 !BAD_REQUEST,
                 "Работник с таким номером телефона уже существует"
             ),
+        Err(err) => return Err(err.into()),
+    };
+
+    let result =
+        sqlx::query("INSERT INTO Teachers(employee_id, subject_id, room_id) VALUES($1, $2, $3)")
+            .bind(employee.id)
+            .bind(subject_id)
+            .bind(room_id)
+            .execute(&mut *tx)
+            .await;
+    match result {
+        Ok(_) => {}
         Err(err)
             if matches!(err.as_database_error(), Some(err) if
                 err.is_foreign_key_violation() &&
@@ -149,14 +161,8 @@ async fn create(
             ) =>
             fail!(!BAD_REQUEST, "Кабинета с таким ИД не существует"),
         Err(err) => return Err(err.into()),
-    };
+    }
 
-    sqlx::query("INSERT INTO Teachers(employee_id, subject_id, room_id) VALUES($1, $2, $3)")
-        .bind(employee.id)
-        .bind(subject_id)
-        .bind(room_id)
-        .execute(&mut *tx)
-        .await?;
     tx.commit().await?;
 
     Ok(Json(Teacher {

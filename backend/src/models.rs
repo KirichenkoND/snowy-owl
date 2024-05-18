@@ -15,7 +15,7 @@ pub struct Room {
     pub id: i32,
     #[serde(rename = "name")]
     pub room: String,
-    pub subject_id: i32,
+    pub subject_id: Option<i32>,
 }
 
 #[derive(Debug, Type, Serialize, Deserialize)]
@@ -23,6 +23,7 @@ pub struct Room {
 pub enum Role {
     Teacher,
     Principal,
+    Student,
 }
 
 #[derive(Serialize, FromRow, ToSchema)]

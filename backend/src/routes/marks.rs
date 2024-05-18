@@ -116,6 +116,7 @@ async fn create(
     let teacher_id = match claims.role {
         Role::Teacher => claims.employee_id,
         Role::Principal => teacher_id.ok_or(fail!(BAD_REQUEST, "teacher_id is required"))?,
+        Role::Student => fail!(!FORBIDDEN, "Ученик не может добавлять оценки"),
     };
 
     sqlx::query(

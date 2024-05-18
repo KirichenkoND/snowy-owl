@@ -1,6 +1,8 @@
 use super::{Json, Path, Query, RouteResult, RouteState};
 use crate::{fail, models::Student, AppState};
+use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use axum::{extract::State, routing::*};
+use rand::rngs::OsRng;
 use serde::Deserialize;
 use utoipa::{IntoParams, OpenApi, ToSchema};
 
@@ -66,6 +68,8 @@ struct CreateOrUpdateStudentRequest {
     pub last_name: String,
     pub middle_name: Option<String>,
     pub class_id: i32,
+    pub phone: String,
+    pub password: String,
 }
 
 /// Creates new student
@@ -85,12 +89,19 @@ async fn create(
         last_name,
         middle_name,
         class_id,
+        phone,
+        password,
     } = data;
+
+    let password_hash = Argon2::default()
+        .hash_password(password.as_bytes(), &SaltString::generate(OsRng))
+        .unwrap()
+        .to_string();
 
     let result = sqlx::query_as::<_, Student>(
         r#"
-            INSERT INTO Students(first_name, last_name, middle_name, class_id)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO Students(first_name, last_name, middle_name, class_id, phone, password_hash)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING *
         "#,
     )
@@ -98,6 +109,8 @@ async fn create(
     .bind(last_name)
     .bind(middle_name)
     .bind(class_id)
+    .bind(phone)
+    .bind(password_hash)
     .fetch_one(&state.db)
     .await;
 
@@ -130,7 +143,14 @@ async fn update(
         last_name,
         middle_name,
         class_id,
+        phone,
+        password,
     } = data;
+
+    let password_hash = Argon2::default()
+        .hash_password(password.as_bytes(), &SaltString::generate(OsRng))
+        .unwrap()
+        .to_string();
 
     let result = sqlx::query_as::<_, Student>(
         r#"
@@ -139,7 +159,9 @@ async fn update(
                 first_name = $2,
                 last_name = $3,
                 middle_name = $4,
-                class_id = $5
+                class_id = $5,
+                phone = $6,
+                password = $7
             WHERE
                 id = $1
             RETURNING *
@@ -150,6 +172,8 @@ async fn update(
     .bind(last_name)
     .bind(middle_name)
     .bind(class_id)
+    .bind(phone)
+    .bind(password_hash)
     .fetch_optional(&state.db)
     .await;
 
