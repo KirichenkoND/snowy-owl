@@ -89,7 +89,7 @@ struct CreateMarkRequest {
     teacher_id: Option<i32>,
     student_id: i32,
     subject_id: i32,
-    mark: i8,
+    mark: i16,
 }
 
 /// Create a new mark
@@ -112,6 +112,10 @@ async fn create(
         subject_id,
         mark,
     } = data;
+
+    if !(1..=5).contains(&mark) {
+        fail!(!BAD_REQUEST, "Оценка должна быть межды 1 и 5")
+    }
 
     let teacher_id = match claims.role {
         Role::Teacher => claims.employee_id,

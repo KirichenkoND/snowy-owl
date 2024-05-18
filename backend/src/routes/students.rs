@@ -69,7 +69,7 @@ struct CreateOrUpdateStudentRequest {
     pub middle_name: Option<String>,
     pub class_id: i32,
     pub phone: String,
-    pub password: String,
+    pub password: Option<String>,
 }
 
 /// Creates new student
@@ -94,7 +94,12 @@ async fn create(
     } = data;
 
     let password_hash = Argon2::default()
-        .hash_password(password.as_bytes(), &SaltString::generate(OsRng))
+        .hash_password(
+            password
+                .ok_or(fail!(BAD_REQUEST, "Необходим пароль для ученика"))?
+                .as_bytes(),
+            &SaltString::generate(OsRng),
+        )
         .unwrap()
         .to_string();
 
@@ -147,10 +152,12 @@ async fn update(
         password,
     } = data;
 
-    let password_hash = Argon2::default()
-        .hash_password(password.as_bytes(), &SaltString::generate(OsRng))
-        .unwrap()
-        .to_string();
+    let password_hash = password.map(|p| {
+        Argon2::default()
+            .hash_password(p.as_bytes(), &SaltString::generate(OsRng))
+            .unwrap()
+            .to_string()
+    });
 
     let result = sqlx::query_as::<_, Student>(
         r#"
@@ -161,7 +168,7 @@ async fn update(
                 middle_name = $4,
                 class_id = $5,
                 phone = $6,
-                password = $7
+                password_hash = coalesce($7, password_hash)
             WHERE
                 id = $1
             RETURNING *

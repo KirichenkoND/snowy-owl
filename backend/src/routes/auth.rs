@@ -13,19 +13,10 @@ use axum_extra::either::Either;
 use axum_extra::extract::{cookie::Cookie, CookieJar};
 use jsonwebtoken::Header;
 use serde::Deserialize;
-use sqlx::prelude::FromRow;
 use sqlx::Row;
 use time::{Duration, OffsetDateTime};
 use utoipa::OpenApi;
 use utoipa::ToSchema;
-
-#[derive(Deserialize, FromRow, ToSchema)]
-struct MeResponse {
-    first_name: String,
-    last_name: String,
-    middle_name: Option<String>,
-    role: Role,
-}
 
 async fn me(
     State(state): RouteState,
@@ -143,4 +134,5 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/login", post(login))
         .route("/logout", post(logout))
+        .route("/me", get(me))
 }
