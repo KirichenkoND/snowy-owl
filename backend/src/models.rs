@@ -64,6 +64,7 @@ pub struct Student {
     pub middle_name: Option<String>,
     #[serde(with = "time::serde::rfc3339")]
     pub enrolled_at: OffsetDateTime,
+    pub phone: String,
     pub class_id: i32,
 }
 
