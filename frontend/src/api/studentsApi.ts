@@ -60,6 +60,7 @@ export const studentsApi = createApi({
 
 export const {
     useGetStudentsQuery,
+    useLazyGetStudentsQuery,
     useCreateStudentMutation,
     useUpdateStudentMutation,
     useDeleteStudentMutation,

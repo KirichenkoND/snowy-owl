@@ -63,6 +63,7 @@ export const teachersApi = createApi({
 
 export const {
     useGetTeachersQuery,
+    useLazyGetTeachersQuery,
     useCreateTeacherMutation,
     useUpdateTeacherMutation,
     useDeleteTeacherMutation,

@@ -50,6 +50,7 @@ export const classesApi = createApi({
 
 export const {
     useGetClassesQuery,
+    useLazyGetClassesQuery,
     useCreateClassMutation,
     useUpdateClassMutation,
     useDeleteClassMutation,

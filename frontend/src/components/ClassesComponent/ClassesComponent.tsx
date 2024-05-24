@@ -1,164 +1,267 @@
 // src/components/ClassesComponent.tsx
-import React, { useEffect, useState } from 'react';
-import { useGetClassesQuery, useUpdateClassMutation, useDeleteClassMutation, useCreateClassMutation } from '../../api/classesApi';
-import { Alert, CircularProgress, Snackbar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField } from '@mui/material';
+import React, { useEffect, useState } from "react";
+import {
+  useGetClassesQuery,
+  useUpdateClassMutation,
+  useDeleteClassMutation,
+  useCreateClassMutation,
+  useLazyGetClassesQuery,
+} from "../../api/classesApi";
+import {
+  Alert,
+  CircularProgress,
+  Snackbar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  TextField,
+} from "@mui/material";
+import Popup from "../Popup/Popup";
+import { useLazyGetStudentsQuery } from "../../api/studentsApi";
 
 const ClassesComponent: React.FC = () => {
-    const { data: response, isLoading, isError, isSuccess, refetch } = useGetClassesQuery({});
-    const classes = response?.data || [];
+  const {
+    data: response,
+    isLoading,
+    isError,
+    isSuccess,
+    refetch,
+  } = useGetClassesQuery({});
+  const classes = response?.data || [];
+  const [trigger, { data: data1, isLoading: classInfoisLoading }] =
+    useLazyGetStudentsQuery();
+  const [newClassName, setNewClassName] = useState("");
+  const [editClassNames, setEditClassNames] = useState<{
+    [id: number]: string;
+  }>({});
+  const [isEditing, setIsEditing] = useState<{ [id: number]: boolean }>({});
+  const [createClass] = useCreateClassMutation();
+  const [updateClass] = useUpdateClassMutation();
+  const [deleteClass] = useDeleteClassMutation();
+  const [classData, setClassData] = useState({});
+  const [error, setError] = useState<string | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-    const [newClassName, setNewClassName] = useState('');
-    const [editClassNames, setEditClassNames] = useState<{ [id: number]: string }>({});
-    const [isEditing, setIsEditing] = useState<{ [id: number]: boolean }>({});
-    const [createClass] = useCreateClassMutation();
-    const [updateClass] = useUpdateClassMutation();
-    const [deleteClass] = useDeleteClassMutation();
+  useEffect(() => {
+    if (isSuccess) {
+      console.log("Classes fetched successfully:", classes);
+      setEditClassNames(
+        classes.reduce((acc, curr) => {
+          acc[curr.id] = curr.name;
+          return acc;
+        }, {} as { [id: number]: string })
+      );
+      setIsEditing(
+        classes.reduce((acc, curr) => {
+          acc[curr.id] = false;
+          return acc;
+        }, {} as { [id: number]: boolean })
+      );
+    }
+  }, [classes, isSuccess]);
 
-    const [error, setError] = useState<string | null>(null);
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleCreateClass = async () => {
+    try {
+      await createClass({ name: newClassName }).unwrap();
+      setNewClassName("");
+      refetch();
+      setError(null);
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("Failed to create class:", error);
+      setError("Failed to create class.");
+      setSnackbarOpen(true);
+    }
+  };
 
-    useEffect(() => {
-        if (isSuccess) {
-            console.log('Classes fetched successfully:', classes);
-            setEditClassNames(classes.reduce((acc, curr) => {
-                acc[curr.id] = curr.name;
-                return acc;
-            }, {} as { [id: number]: string }));
-            setIsEditing(classes.reduce((acc, curr) => {
-                acc[curr.id] = false;
-                return acc;
-            }, {} as { [id: number]: boolean }));
-        }
-    }, [classes, isSuccess]);
+  const handleUpdateClass = async (id: number) => {
+    try {
+      await updateClass({ id, data: { name: editClassNames[id] } }).unwrap();
+      setIsEditing({ ...isEditing, [id]: false });
+      refetch();
+      setError(null);
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("Failed to update class:", error);
+      setError("Failed to update class.");
+      setSnackbarOpen(true);
+    }
+  };
 
-    const handleCreateClass = async () => {
-        try {
-            await createClass({ name: newClassName }).unwrap();
-            setNewClassName('');
-            refetch();
-            setError(null);
-            setSnackbarOpen(true);
-        } catch (error) {
-            console.error('Failed to create class:', error);
-            setError('Failed to create class.');
-            setSnackbarOpen(true);
-        }
-    };
+  const handleDeleteClass = async (id: number) => {
+    try {
+      await deleteClass(id).unwrap();
+      refetch();
+      setError(null);
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("Failed to delete class:", error);
+      setError("Failed to delete class.");
+      setSnackbarOpen(true);
+    }
+  };
 
-    const handleUpdateClass = async (id: number) => {
-        try {
-            await updateClass({ id, data: { name: editClassNames[id] } }).unwrap();
-            setIsEditing({ ...isEditing, [id]: false });
-            refetch();
-            setError(null);
-            setSnackbarOpen(true);
-        } catch (error) {
-            console.error('Failed to update class:', error);
-            setError('Failed to update class.');
-            setSnackbarOpen(true);
-        }
-    };
+  const handleEditClick = (id: number) => {
+    setIsEditing({ ...isEditing, [id]: true });
+  };
 
-    const handleDeleteClass = async (id: number) => {
-        try {
-            await deleteClass(id).unwrap();
-            refetch();
-            setError(null);
-            setSnackbarOpen(true);
-        } catch (error) {
-            console.error('Failed to delete class:', error);
-            setError('Failed to delete class.');
-            setSnackbarOpen(true);
-        }
-    };
+  const handleCancelClick = (id: number) => {
+    setIsEditing({ ...isEditing, [id]: false });
+  };
 
-    const handleEditClick = (id: number) => {
-        setIsEditing({ ...isEditing, [id]: true });
-    };
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
 
-    const handleCancelClick = (id: number) => {
-        setIsEditing({ ...isEditing, [id]: false });
-    };
+  const handleShowPopupClassInfo = (id: number) => {
+    setClassData(trigger({ class_ids: [id] }));
+    setIsPopupOpen(true);
+  };
 
-    const handleCloseSnackbar = () => {
-        setSnackbarOpen(false);
-    };
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+  };
 
-    if (isLoading) return <div><CircularProgress /></div>;
-    if (isError) return <div>Ошибка.</div>;
-
+  if (isLoading)
     return (
-        <div>
-            <h1>Classes</h1>
-            <Snackbar
-                open={snackbarOpen}
-                autoHideDuration={6000}
-                onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            >
-                <Alert onClose={handleCloseSnackbar} severity={error ? "error" : "success"} sx={{ width: '100%' }}>
-                    {error ? error : "Operation successful"}
-                </Alert>
-            </Snackbar>
-            <TextField
-                label="New Class Name"
-                value={newClassName}
-                onChange={(e) => setNewClassName(e.target.value)}
-                variant="outlined"
-                fullWidth
-                margin="normal"
-            />
-            <Button variant="contained" color="primary" onClick={handleCreateClass}>Create Class</Button>
-           
-            <div style={{ margin: '5%' }}>
-                <TableContainer component={Paper} sx={{ marginTop: 2 }}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Name</TableCell>
-                                <TableCell align="right">Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {classes.map((classItem) => (
-                                <TableRow key={classItem.id}>
-                                    <TableCell>
-                                        {isEditing[classItem.id] ? (
-                                            <TextField
-                                                value={editClassNames[classItem.id]}
-                                                onChange={(e) => setEditClassNames({
-                                                    ...editClassNames,
-                                                    [classItem.id]: e.target.value
-                                                })}
-                                                variant="outlined"
-                                                fullWidth
-                                            />
-                                        ) : (
-                                            classItem.name
-                                        )}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        {isEditing[classItem.id] ? (
-                                            <>
-                                                <Button onClick={() => handleUpdateClass(classItem.id)} variant="contained" color="primary" sx={{ marginRight: 1 }}>Save</Button>
-                                                <Button onClick={() => handleCancelClick(classItem.id)} variant="outlined">Cancel</Button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Button onClick={() => handleEditClick(classItem.id)} variant="contained" color="primary" sx={{ marginRight: 1 }}>Update</Button>
-                                                <Button onClick={() => handleDeleteClass(classItem.id)} variant="contained" color="secondary">Delete</Button>
-                                            </>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </div>
-            
-        </div>
+      <div>
+        <CircularProgress />
+      </div>
     );
+  if (isError) return <div>Ошибка.</div>;
+  if (data1) {
+    console.log(data1);
+  }
+  return (
+    <div>
+      <h1>Classes</h1>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={error ? "error" : "success"}
+          sx={{ width: "100%" }}
+        >
+          {error ? error : "Operation successful"}
+        </Alert>
+      </Snackbar>
+      <TextField
+        label="New Class Name"
+        value={newClassName}
+        onChange={(e) => setNewClassName(e.target.value)}
+        variant="outlined"
+        fullWidth
+        margin="normal"
+      />
+      <Button variant="contained" color="primary" onClick={handleCreateClass}>
+        Create Class
+      </Button>
+      <div style={{ margin: "5%" }}>
+        <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {classes.map((classItem) => (
+                <TableRow key={classItem.id}>
+                  <TableCell
+                    onClick={() => handleShowPopupClassInfo(classItem.id)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {isEditing[classItem.id] ? (
+                      <TextField
+                        value={editClassNames[classItem.id]}
+                        onChange={(e) =>
+                          setEditClassNames({
+                            ...editClassNames,
+                            [classItem.id]: e.target.value,
+                          })
+                        }
+                        variant="outlined"
+                        fullWidth
+                      />
+                    ) : (
+                      classItem.name
+                    )}
+                  </TableCell>
+                  <TableCell align="right">
+                    {isEditing[classItem.id] ? (
+                      <>
+                        <Button
+                          onClick={() => handleUpdateClass(classItem.id)}
+                          variant="contained"
+                          color="primary"
+                          sx={{ marginRight: 1 }}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          onClick={() => handleCancelClick(classItem.id)}
+                          variant="outlined"
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={() => handleEditClick(classItem.id)}
+                          variant="contained"
+                          color="primary"
+                          sx={{ marginRight: 1 }}
+                        >
+                          Update
+                        </Button>
+                        <Button
+                          onClick={() => handleDeleteClass(classItem.id)}
+                          variant="contained"
+                          color="secondary"
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
+      <Popup isOpen={isPopupOpen} onClose={handleClosePopup}>
+        {data1 && data1.data.length > 0 ? (
+          <div>
+            {data1.data.map((studentInfo) => {
+              return (
+                <>
+                  <p>Имя:{studentInfo.first_name}</p>
+                  <p>Фамилия:{studentInfo.middle_name}</p>
+                  <p>Отчество:{studentInfo.last_name}</p>
+                  <p>Номер телефона:{studentInfo.phone}</p>
+                </>
+              );
+            })}
+          </div>
+        ) : (
+          <p>Пусто</p>
+        )}
+      </Popup>
+    </div>
+  );
 };
 
 export default ClassesComponent;
