@@ -20,6 +20,7 @@ import {
   Paper,
   Button,
   TextField,
+  TablePagination,
 } from "@mui/material";
 import Popup from "../Popup/Popup";
 import { useLazyGetStudentsQuery } from "../../api/studentsApi";
@@ -48,9 +49,11 @@ const ClassesComponent: React.FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
   useEffect(() => {
     if (isSuccess) {
-      console.log("Classes fetched successfully:", classes);
       setEditClassNames(
         classes.reduce((acc, curr) => {
           acc[curr.id] = curr.name;
@@ -74,7 +77,6 @@ const ClassesComponent: React.FC = () => {
       setError(null);
       setSnackbarOpen(true);
     } catch (error) {
-      console.error("Failed to create class:", error);
       setError("Failed to create class.");
       setSnackbarOpen(true);
     }
@@ -88,7 +90,6 @@ const ClassesComponent: React.FC = () => {
       setError(null);
       setSnackbarOpen(true);
     } catch (error) {
-      console.error("Failed to update class:", error);
       setError("Failed to update class.");
       setSnackbarOpen(true);
     }
@@ -101,7 +102,6 @@ const ClassesComponent: React.FC = () => {
       setError(null);
       setSnackbarOpen(true);
     } catch (error) {
-      console.error("Failed to delete class:", error);
       setError("Failed to delete class.");
       setSnackbarOpen(true);
     }
@@ -128,16 +128,25 @@ const ClassesComponent: React.FC = () => {
     setIsPopupOpen(false);
   };
 
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, rowsPerPage));
+    setPage(0);
+  };
+
   if (isLoading)
     return (
       <div>
         <CircularProgress />
       </div>
     );
-  if (isError) return <div>Ошибка.</div>;
-  if (data1) {
-    console.log(data1);
-  }
+  if (isError) return <Alert severity="error">Ошибка.</Alert>;
+
   return (
     <div>
       <h1>Classes</h1>
@@ -176,85 +185,94 @@ const ClassesComponent: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {classes.map((classItem) => (
-                <TableRow key={classItem.id}>
-                  <TableCell
-                    onClick={() => handleShowPopupClassInfo(classItem.id)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {isEditing[classItem.id] ? (
-                      <TextField
-                        value={editClassNames[classItem.id]}
-                        onChange={(e) =>
-                          setEditClassNames({
-                            ...editClassNames,
-                            [classItem.id]: e.target.value,
-                          })
-                        }
-                        variant="outlined"
-                        fullWidth
-                      />
-                    ) : (
-                      classItem.name
-                    )}
-                  </TableCell>
-                  <TableCell align="right">
-                    {isEditing[classItem.id] ? (
-                      <>
-                        <Button
-                          onClick={() => handleUpdateClass(classItem.id)}
-                          variant="contained"
-                          color="primary"
-                          sx={{ marginRight: 1 }}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          onClick={() => handleCancelClick(classItem.id)}
+              {classes
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((classItem) => (
+                  <TableRow key={classItem.id}>
+                    <TableCell
+                      onClick={() => handleShowPopupClassInfo(classItem.id)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {isEditing[classItem.id] ? (
+                        <TextField
+                          value={editClassNames[classItem.id]}
+                          onChange={(e) =>
+                            setEditClassNames({
+                              ...editClassNames,
+                              [classItem.id]: e.target.value,
+                            })
+                          }
                           variant="outlined"
-                        >
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          onClick={() => handleEditClick(classItem.id)}
-                          variant="contained"
-                          color="primary"
-                          sx={{ marginRight: 1 }}
-                        >
-                          Update
-                        </Button>
-                        <Button
-                          onClick={() => handleDeleteClass(classItem.id)}
-                          variant="contained"
-                          color="secondary"
-                        >
-                          Delete
-                        </Button>
-                      </>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+                          fullWidth
+                        />
+                      ) : (
+                        classItem.name
+                      )}
+                    </TableCell>
+                    <TableCell align="right">
+                      {isEditing[classItem.id] ? (
+                        <>
+                          <Button
+                            onClick={() => handleUpdateClass(classItem.id)}
+                            variant="contained"
+                            color="primary"
+                            sx={{ marginRight: 1 }}
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            onClick={() => handleCancelClick(classItem.id)}
+                            variant="outlined"
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            onClick={() => handleEditClick(classItem.id)}
+                            variant="contained"
+                            color="primary"
+                            sx={{ marginRight: 1 }}
+                          >
+                            Update
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteClass(classItem.id)}
+                            variant="contained"
+                            color="secondary"
+                          >
+                            Delete
+                          </Button>
+                        </>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            component="div"
+            count={classes.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
         </TableContainer>
       </div>
       <Popup isOpen={isPopupOpen} onClose={handleClosePopup}>
         {data1 && data1.data.length > 0 ? (
           <div>
-            {data1.data.map((studentInfo) => {
-              return (
-                <>
-                  <p>Имя:{studentInfo.first_name}</p>
-                  <p>Фамилия:{studentInfo.middle_name}</p>
-                  <p>Отчество:{studentInfo.last_name}</p>
-                  <p>Номер телефона:{studentInfo.phone}</p>
-                </>
-              );
-            })}
+            {data1.data.map((studentInfo) => (
+              <>
+                <p>Имя:{studentInfo.first_name}</p>
+                <p>Фамилия:{studentInfo.middle_name}</p>
+                <p>Отчество:{studentInfo.last_name}</p>
+                <p>Номер телефона:{studentInfo.phone}</p>
+              </>
+            ))}
           </div>
         ) : (
           <p>Пусто</p>
