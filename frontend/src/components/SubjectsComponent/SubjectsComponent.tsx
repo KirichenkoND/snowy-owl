@@ -1,12 +1,34 @@
 // src/components/SubjectsComponent.tsx
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
+  Snackbar,
+  Container,
+  Box,
+  TextField,
+  Button,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  CircularProgress,
+  Grid,
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
+  Paper,
+  TablePagination,
+} from '@mui/material';
+import { Edit, Delete, Save, Cancel } from '@mui/icons-material';
+import {
   useGetSubjectsQuery,
   useCreateSubjectMutation,
   useUpdateSubjectMutation,
   useDeleteSubjectMutation,
 } from "../../api/subjectsApi";
-import { Alert, Snackbar } from "@mui/material";
 import { useLazyGetTeachersQuery } from "../../api/teachersApi";
 import Popup from "../Popup/Popup";
 
@@ -18,40 +40,34 @@ const SubjectsComponent: React.FC = () => {
     isSuccess,
     refetch,
   } = useGetSubjectsQuery({});
-  const [trigger, { data: data1, isLoading: classInfoisLoading }] =
-    useLazyGetTeachersQuery();
+  const [trigger, { data: data1 }] = useLazyGetTeachersQuery();
   const subjects = response?.data || [];
 
   const [newSubjectName, setNewSubjectName] = useState("");
-  const [editSubjectNames, setEditSubjectNames] = useState<{
-    [id: number]: string;
-  }>({});
+  const [editSubjectNames, setEditSubjectNames] = useState<{ [id: number]: string }>({});
   const [isEditing, setIsEditing] = useState<{ [id: number]: boolean }>({});
   const [createSubject] = useCreateSubjectMutation();
   const [updateSubject] = useUpdateSubjectMutation();
   const [deleteSubject] = useDeleteSubjectMutation();
 
   const [error, setError] = useState<string | null>(null);
-
   const [classData, setClassData] = useState({});
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
   useEffect(() => {
     if (isSuccess) {
-      console.log("Subjects fetched successfully:", subjects);
-      setEditSubjectNames(
-        subjects.reduce((acc, curr) => {
-          acc[curr.id] = curr.name;
-          return acc;
-        }, {} as { [id: number]: string })
-      );
-      setIsEditing(
-        subjects.reduce((acc, curr) => {
-          acc[curr.id] = false;
-          return acc;
-        }, {} as { [id: number]: boolean })
-      );
+      setEditSubjectNames(subjects.reduce((acc, curr) => {
+        acc[curr.id] = curr.name;
+        return acc;
+      }, {} as { [id: number]: string }));
+      setIsEditing(subjects.reduce((acc, curr) => {
+        acc[curr.id] = false;
+        return acc;
+      }, {} as { [id: number]: boolean }));
     }
   }, [subjects, isSuccess]);
 
@@ -63,7 +79,6 @@ const SubjectsComponent: React.FC = () => {
       setError(null);
       setSnackbarOpen(true);
     } catch (error) {
-      console.error("Failed to create subject:", error);
       setError("Failed to create subject.");
       setSnackbarOpen(true);
     }
@@ -71,16 +86,12 @@ const SubjectsComponent: React.FC = () => {
 
   const handleUpdateSubject = async (id: number) => {
     try {
-      await updateSubject({
-        id,
-        data: { name: editSubjectNames[id] },
-      }).unwrap();
+      await updateSubject({ id, data: { name: editSubjectNames[id] } }).unwrap();
       setIsEditing({ ...isEditing, [id]: false });
       refetch();
       setError(null);
       setSnackbarOpen(true);
     } catch (error) {
-      console.error("Failed to update subject:", error);
       setError("Failed to update subject.");
       setSnackbarOpen(true);
     }
@@ -93,7 +104,6 @@ const SubjectsComponent: React.FC = () => {
       setError(null);
       setSnackbarOpen(true);
     } catch (error) {
-      console.error("Failed to delete subject:", error);
       setError("Failed to delete subject.");
       setSnackbarOpen(true);
     }
@@ -120,102 +130,118 @@ const SubjectsComponent: React.FC = () => {
     setIsPopupOpen(false);
   };
 
-  if (isLoading) return <div>Загрузка...</div>;
-  if (isError) return <div>Ошибка.</div>;
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  if (isLoading) return <CircularProgress />;
+  if (isError) return <Typography color="error">Ошибка.</Typography>;
 
   return (
-    <div>
-      <h1>Subjects</h1>
+    <Container>
+      <Typography variant="h4" component="h1" gutterBottom>Subjects</Typography>
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={error ? "error" : "success"}
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={handleCloseSnackbar} severity={error ? "error" : "success"} sx={{ width: "100%" }}>
           {error ? error : "Operation successful"}
         </Alert>
       </Snackbar>
-      <input
-        type="text"
-        value={newSubjectName}
-        onChange={(e) => setNewSubjectName(e.target.value)}
-        placeholder="New Subject Name"
-      />
-      <button onClick={handleCreateSubject}>Create Subject</button>
-      <ul style={{ listStyle: "none" }}>
-        {subjects.map((subject) => (
-          <li
-            key={subject.id}
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            {isEditing[subject.id] ? (
-              <>
-                <input
-                  type="text"
+      <Box mb={3}>
+        <TextField
+          label="New Subject Name"
+          value={newSubjectName}
+          onChange={(e) => setNewSubjectName(e.target.value)}
+          variant="outlined"
+          fullWidth
+          margin="normal"
+        />
+        <Button variant="contained" color="primary" onClick={handleCreateSubject}>
+          Create Subject
+        </Button>
+      </Box>
+      <Paper>
+        <List>
+          {subjects.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((subject) => (
+            <ListItem key={subject.id}>
+              {isEditing[subject.id] ? (
+                <TextField
                   value={editSubjectNames[subject.id]}
                   onChange={(e) =>
-                    setEditSubjectNames({
-                      ...editSubjectNames,
-                      [subject.id]: e.target.value,
-                    })
+                    setEditSubjectNames({ ...editSubjectNames, [subject.id]: e.target.value })
                   }
+                  variant="outlined"
+                  fullWidth
                 />
-                <button onClick={() => handleUpdateSubject(subject.id)}>
-                  Сохранить
-                </button>
-                <button onClick={() => handleCancelClick(subject.id)}>
-                  Отмена
-                </button>
-              </>
-            ) : (
-              <>
-                <p
+              ) : (
+                <ListItemText
+                  primary={subject.name}
                   onClick={() => handleShowPopupClassInfo(subject.id)}
-                  style={{ marginRight: 30, cursor: "pointer" }}
-                >
-                  {subject.name}
-                </p>
-                <button onClick={() => handleEditClick(subject.id)}>
-                  Update
-                </button>
-                <button onClick={() => handleDeleteSubject(subject.id)}>
-                  Delete
-                </button>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+                  style={{ cursor: "pointer" }}
+                />
+              )}
+              <ListItemSecondaryAction>
+                {isEditing[subject.id] ? (
+                  <>
+                    <IconButton onClick={() => handleUpdateSubject(subject.id)} color="primary">
+                      <Save />
+                    </IconButton>
+                    <IconButton onClick={() => handleCancelClick(subject.id)} color="secondary">
+                      <Cancel />
+                    </IconButton>
+                  </>
+                ) : (
+                  <>
+                    <IconButton onClick={() => handleEditClick(subject.id)} color="primary">
+                      <Edit />
+                    </IconButton>
+                    <IconButton onClick={() => handleDeleteSubject(subject.id)} color="secondary">
+                      <Delete />
+                    </IconButton>
+                  </>
+                )}
+              </ListItemSecondaryAction>
+            </ListItem>
+          ))}
+        </List>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={subjects.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </Paper>
       <Popup isOpen={isPopupOpen} onClose={handleClosePopup}>
         {data1 && data1.data.length > 0 ? (
-          <div>
-            {data1.data.map((studentInfo) => {
-              return (
-                <>
-                  <p>Имя:{studentInfo.first_name}</p>
-                  <p>Фамилия:{studentInfo.middle_name}</p>
-                  <p>Отчество:{studentInfo.last_name}</p>
-                  <p>Номер телефона:{studentInfo.phone}</p>
-                  <p>Кабинет:{studentInfo.room_id}</p>
-                </>
-              );
-            })}
-          </div>
+          <Box>
+            {data1.data.map((studentInfo) => (
+              <Box key={studentInfo.id}>
+                <Typography>Имя: {studentInfo.first_name}</Typography>
+                <Typography>Фамилия: {studentInfo.middle_name}</Typography>
+                <Typography>Отчество: {studentInfo.last_name}</Typography>
+                <Typography>Номер телефона: {studentInfo.phone}</Typography>
+                <Typography>Кабинет: {studentInfo.room_id}</Typography>
+              </Box>
+            ))}
+          </Box>
         ) : (
-          <p>Пусто</p>
+          <Typography>Пусто</Typography>
         )}
       </Popup>
-    </div>
+    </Container>
   );
 };
 
