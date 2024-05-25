@@ -1,0 +1,58 @@
+// src/components/Header/Header.scss
+
+.header {
+  position: sticky;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: rgb(136, 115, 227);
+
+  .header-logo img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+  }
+
+  .header-nav {
+    display: flex;
+    gap: 1rem;
+
+    a {
+      text-decoration: none;
+    }
+
+    img {
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+  @media (max-width: 1200px) {
+    .nav-toggle {
+      display: block;
+    }
+
+    .header-nav {
+      display: none;
+      flex-direction: column;
+      gap: 0.5rem;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background-color: rgb(136, 115, 227);
+      width: 100%;
+    }
+
+    .header-nav.open {
+      display: flex;
+    }
+  }
+}
