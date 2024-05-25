@@ -1,26 +1,56 @@
 import React from "react";
 import { useMeQuery } from "../../api/authApi";
+import {
+  CircularProgress,
+  Container,
+  Typography,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  Alert,
+} from "@mui/material";
 
 const ProfileComponent: React.FC = () => {
-  const { data: profile, isLoading, isError, isSuccess } = useMeQuery();
+  const { data: profileResponse, isLoading, isError, isSuccess } = useMeQuery();
+  const profile = profileResponse?.data;
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error loading profile.</div>;
-  console.log(profile);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const hh = String(date.getHours()).padStart(2, "0");
+    const min = String(date.getMinutes()).padStart(2, "0");
+    const ss = String(date.getSeconds()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+  };
+
+  if (isLoading) return <CircularProgress />;
+  if (isError) return <Alert severity="error">Error loading profile.</Alert>;
+
   return (
-    <>
+    <Container>
       {profile && isSuccess && (
-        <div>
-          <h1>Profile</h1>
-          <p style={{ color: "black" }}>ID: {profile.phone}</p>
-          <p>First Name: {profile.first_name}</p>
-          <p>Last Name: {profile.last_name}</p>
-          <p>Phone: {profile.phone}</p>
-          <p>Role: {profile.role}</p>
-          <p>Employed At: {profile.employed_at}</p>
-        </div>
+        <Paper elevation={3} sx={{ padding: 3, marginTop: 3 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Profile
+          </Typography>
+          <List>
+            {Object.entries(profile).map(([key, value]) => (
+              <ListItem key={key}>
+                <ListItemText
+                  primary={key.replace(/_/g, " ")}
+                  secondary={
+                    key === "employed_at" ? formatDate(value as string) : String(value)
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
       )}
-    </>
+    </Container>
   );
 };
 
