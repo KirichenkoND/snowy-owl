@@ -68,5 +68,5 @@ export const marksApi = createApi({
 export const {
     useLazyGetMarksQuery,
     useGetMarksQuery,
-    useCreateMarkMutation,
+    useCreateMarkMutation
 } = marksApi;

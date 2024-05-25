@@ -50,6 +50,7 @@ export const subjectsApi = createApi({
 
 export const {
     useGetSubjectsQuery,
+    useLazyGetSubjectsQuery,
     useCreateSubjectMutation,
     useUpdateSubjectMutation,
     useDeleteSubjectMutation,

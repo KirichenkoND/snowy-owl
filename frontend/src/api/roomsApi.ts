@@ -51,6 +51,7 @@ export const roomsApi = createApi({
 
 export const {
     useGetRoomsQuery,
+    useLazyGetRoomsQuery,
     useCreateRoomMutation,
     useUpdateRoomMutation,
     useDeleteRoomMutation,
