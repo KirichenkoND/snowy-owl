@@ -8,8 +8,33 @@ import {
 } from '../../api/teachersApi';
 import { useGetRoomsQuery } from '../../api/roomsApi';
 import { useGetSubjectsQuery } from '../../api/subjectsApi';
-import { Alert, Snackbar } from '@mui/material';
-import Popup from '../Popup/Popup';
+import {
+    Alert,
+    Snackbar,
+    Container,
+    Box,
+    TextField,
+    Button,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    CircularProgress,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemSecondaryAction,
+    IconButton,
+    Paper,
+    Typography,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    TablePagination,
+} from '@mui/material';
+import { Edit, Delete, Save, Cancel } from '@mui/icons-material';
 
 const TeachersComponent: React.FC = () => {
     const { data: response, isLoading, isError, isSuccess, refetch } = useGetTeachersQuery({});
@@ -41,9 +66,11 @@ const TeachersComponent: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
 
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
+
     useEffect(() => {
         if (isSuccess) {
-            console.log('Teachers fetched successfully:', teachers);
             setEditTeacherData(teachers.reduce((acc, curr) => {
                 acc[curr.id] = {
                     first_name: curr.first_name,
@@ -79,7 +106,6 @@ const TeachersComponent: React.FC = () => {
             setSnackbarOpen(true);
             setIsPopupOpen(false);
         } catch (error) {
-            console.error('Failed to create teacher:', error);
             setError('Failed to create teacher.');
             setSnackbarOpen(true);
         }
@@ -94,7 +120,6 @@ const TeachersComponent: React.FC = () => {
             setError(null);
             setSnackbarOpen(true);
         } catch (error) {
-            console.error('Failed to update teacher:', error);
             setError('Failed to update teacher.');
             setSnackbarOpen(true);
         }
@@ -107,7 +132,6 @@ const TeachersComponent: React.FC = () => {
             setError(null);
             setSnackbarOpen(true);
         } catch (error) {
-            console.error('Failed to delete teacher:', error);
             setError('Failed to delete teacher.');
             setSnackbarOpen(true);
         }
@@ -133,12 +157,23 @@ const TeachersComponent: React.FC = () => {
         setIsPopupOpen(false);
     };
 
-    if (isLoading) return <div>Загрузка...</div>;
-    if (isError) return <div>Ошибка.</div>;
+    const handleChangePage = (event: unknown, newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    if (isLoading) return <CircularProgress />;
+    if (isError) return <Alert severity="error">Ошибка.</Alert>;
 
     return (
-        <div>
-            <h1>Teachers</h1>
+        <Container>
+            <Typography variant="h4" component="h1" gutterBottom>Teachers</Typography>
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={6000}
@@ -149,143 +184,215 @@ const TeachersComponent: React.FC = () => {
                     {error ? error : "Operation successful"}
                 </Alert>
             </Snackbar>
-            <button onClick={handleOpenPopup}>Create Teacher</button>
-            <Popup isOpen={isPopupOpen} onClose={handleClosePopup}>
-                <div>
-                    <input
-                        type="text"
-                        value={newTeacher.first_name}
-                        onChange={(e) => setNewTeacher({ ...newTeacher, first_name: e.target.value })}
-                        placeholder="First Name"
-                    />
-                    <input
-                        type="text"
-                        value={newTeacher.last_name}
-                        onChange={(e) => setNewTeacher({ ...newTeacher, last_name: e.target.value })}
-                        placeholder="Last Name"
-                    />
-                    <input
-                        type="text"
-                        value={newTeacher.middle_name}
-                        onChange={(e) => setNewTeacher({ ...newTeacher, middle_name: e.target.value })}
-                        placeholder="Middle Name"
-                    />
-                    <input
-                        type="password"
-                        value={newTeacher.password}
-                        onChange={(e) => setNewTeacher({ ...newTeacher, password: e.target.value })}
-                        placeholder="Password"
-                    />
-                    <input
-                        type="text"
-                        value={newTeacher.phone}
-                        onChange={(e) => setNewTeacher({ ...newTeacher, phone: e.target.value })}
-                        placeholder="Phone"
-                    />
-                    <select
-                        value={newTeacher.room_id}
-                        onChange={(e) => setNewTeacher({ ...newTeacher, room_id: Number(e.target.value) })}
+            <Button variant="contained" color="primary" onClick={handleOpenPopup}>
+                Добавить учителя
+            </Button>
+            <Dialog open={isPopupOpen} onClose={handleClosePopup}>
+                <DialogTitle>Добавить нового учителя</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        ...
+                    </DialogContentText>
+                    <Box
+                        component="form"
+                        noValidate
+                        autoComplete="off"
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
+                        }}
                     >
-                        <option value={0} disabled>Select Room</option>
-                        {rooms.map(room => (
-                            <option key={room.id} value={room.id}>{room.name}</option>
-                        ))}
-                    </select>
-                    <select
-                        value={newTeacher.subject_id}
-                        onChange={(e) => setNewTeacher({ ...newTeacher, subject_id: Number(e.target.value) })}
-                    >
-                        <option value={0} disabled>Select Subject</option>
-                        {subjects.map(subject => (
-                            <option key={subject.id} value={subject.id}>{subject.name}</option>
-                        ))}
-                    </select>
-                    <button onClick={handleCreateTeacher}>Create Teacher</button>
-                </div>
-            </Popup>
-            <ul>
-                {teachers.map((teacher) => (
-                    <li key={teacher.id}>
-                        {isEditing[teacher.id] ? (
-                            <>
-                                <input
-                                    type="text"
-                                    value={editTeacherData[teacher.id]?.first_name || ''}
-                                    onChange={(e) => setEditTeacherData({
-                                        ...editTeacherData,
-                                        [teacher.id]: { ...editTeacherData[teacher.id], first_name: e.target.value }
-                                    })}
-                                    placeholder="First Name"
-                                />
-                                <input
-                                    type="text"
-                                    value={editTeacherData[teacher.id]?.last_name || ''}
-                                    onChange={(e) => setEditTeacherData({
-                                        ...editTeacherData,
-                                        [teacher.id]: { ...editTeacherData[teacher.id], last_name: e.target.value }
-                                    })}
-                                    placeholder="Last Name"
-                                />
-                                <input
-                                    type="text"
-                                    value={editTeacherData[teacher.id]?.middle_name || ''}
-                                    onChange={(e) => setEditTeacherData({
-                                        ...editTeacherData,
-                                        [teacher.id]: { ...editTeacherData[teacher.id], middle_name: e.target.value }
-                                    })}
-                                    placeholder="Middle Name"
-                                />
-                                <input
-                                    type="text"
-                                    value={editTeacherData[teacher.id]?.phone || ''}
-                                    onChange={(e) => setEditTeacherData({
-                                        ...editTeacherData,
-                                        [teacher.id]: { ...editTeacherData[teacher.id], phone: e.target.value }
-                                    })}
-                                    placeholder="Phone"
-                                />
-                                <select
-                                    value={editTeacherData[teacher.id]?.room_id || 0}
-                                    onChange={(e) => setEditTeacherData({
-                                        ...editTeacherData,
-                                        [teacher.id]: { ...editTeacherData[teacher.id], room_id: Number(e.target.value) }
-                                    })}
-                                >
-                                    <option value={0} disabled>Select Room</option>
-                                    {rooms.map(room => (
-                                        <option key={room.id} value={room.id}>{room.name}</option>
-                                    ))}
-                                </select>
-                                <select
-                                    value={editTeacherData[teacher.id]?.subject_id || 0}
-                                    onChange={(e) => setEditTeacherData({
-                                        ...editTeacherData,
-                                        [teacher.id]: { ...editTeacherData[teacher.id], subject_id: Number(e.target.value) }
-                                    })}
-                                >
-                                    <option value={0} disabled>Select Subject</option>
-                                    {subjects.map(subject => (
-                                        <option key={subject.id} value={subject.id}>{subject.name}</option>
-                                    ))}
-                                </select>
-                                <button onClick={() => handleUpdateTeacher(teacher.id)}>Save</button>
-                                <button onClick={() => handleCancelClick(teacher.id)}>Cancel</button>
-                            </>
-                        ) : (
-                            <>
-                                {teacher.first_name} {teacher.last_name} {teacher.middle_name}
-                                <div>
-                                    Room: {rooms.find(room => room.id === teacher.room_id)?.name || 'N/A'},
-                                    Subject: {subjects.find(subject => subject.id === teacher.subject_id)?.name || 'N/A'}
-                                </div>
-                                <button onClick={() => handleEditClick(teacher.id)}>Update</button>
-                                <button onClick={() => handleDeleteTeacher(teacher.id)}>Delete</button>
-                            </>
-                        )}
-                    </li>
-                ))}
-            </ul>
-        </div>
+                        <TextField
+                            label="First Name"
+                            value={newTeacher.first_name}
+                            onChange={(e) => setNewTeacher({ ...newTeacher, first_name: e.target.value })}
+                            variant="outlined"
+                            fullWidth
+                        />
+                        <TextField
+                            label="Last Name"
+                            value={newTeacher.last_name}
+                            onChange={(e) => setNewTeacher({ ...newTeacher, last_name: e.target.value })}
+                            variant="outlined"
+                            fullWidth
+                        />
+                        <TextField
+                            label="Middle Name"
+                            value={newTeacher.middle_name}
+                            onChange={(e) => setNewTeacher({ ...newTeacher, middle_name: e.target.value })}
+                            variant="outlined"
+                            fullWidth
+                        />
+                        <TextField
+                            label="Password"
+                            type="password"
+                            value={newTeacher.password}
+                            onChange={(e) => setNewTeacher({ ...newTeacher, password: e.target.value })}
+                            variant="outlined"
+                            fullWidth
+                        />
+                        <TextField
+                            label="Phone"
+                            value={newTeacher.phone}
+                            onChange={(e) => setNewTeacher({ ...newTeacher, phone: e.target.value })}
+                            variant="outlined"
+                            fullWidth
+                        />
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel>Select Room</InputLabel>
+                            <Select
+                                value={newTeacher.room_id}
+                                onChange={(e) => setNewTeacher({ ...newTeacher, room_id: Number(e.target.value) })}
+                                label="Select Room"
+                            >
+                                <MenuItem value={0} disabled>Select Room</MenuItem>
+                                {rooms.map(room => (
+                                    <MenuItem key={room.id} value={room.id}>{room.name}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel>Select Subject</InputLabel>
+                            <Select
+                                value={newTeacher.subject_id}
+                                onChange={(e) => setNewTeacher({ ...newTeacher, subject_id: Number(e.target.value) })}
+                                label="Select Subject"
+                            >
+                                <MenuItem value={0} disabled>Select Subject</MenuItem>
+                                {subjects.map(subject => (
+                                    <MenuItem key={subject.id} value={subject.id}>{subject.name}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClosePopup} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleCreateTeacher} color="primary">
+                        Create Teacher
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Paper sx={{ marginTop: 3 }}>
+                <List>
+                    {teachers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((teacher) => (
+                        <ListItem key={teacher.id}>
+                            {isEditing[teacher.id] ? (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2 }}>
+                                    <TextField
+                                        label="First Name"
+                                        value={editTeacherData[teacher.id]?.first_name || ''}
+                                        onChange={(e) => setEditTeacherData({
+                                            ...editTeacherData,
+                                            [teacher.id]: { ...editTeacherData[teacher.id], first_name: e.target.value }
+                                        })}
+                                        variant="outlined"
+                                        fullWidth
+                                    />
+                                    <TextField
+                                        label="Last Name"
+                                        value={editTeacherData[teacher.id]?.last_name || ''}
+                                        onChange={(e) => setEditTeacherData({
+                                            ...editTeacherData,
+                                            [teacher.id]: { ...editTeacherData[teacher.id], last_name: e.target.value }
+                                        })}
+                                        variant="outlined"
+                                        fullWidth
+                                    />
+                                    <TextField
+                                        label="Middle Name"
+                                        value={editTeacherData[teacher.id]?.middle_name || ''}
+                                        onChange={(e) => setEditTeacherData({
+                                            ...editTeacherData,
+                                            [teacher.id]: { ...editTeacherData[teacher.id], middle_name: e.target.value }
+                                        })}
+                                        variant="outlined"
+                                        fullWidth
+                                    />
+                                    <TextField
+                                        label="Phone"
+                                        value={editTeacherData[teacher.id]?.phone || ''}
+                                        onChange={(e) => setEditTeacherData({
+                                            ...editTeacherData,
+                                            [teacher.id]: { ...editTeacherData[teacher.id], phone: e.target.value }
+                                        })}
+                                        variant="outlined"
+                                        fullWidth
+                                    />
+                                    <FormControl fullWidth variant="outlined">
+                                        <InputLabel>Select Room</InputLabel>
+                                        <Select
+                                            value={editTeacherData[teacher.id]?.room_id || 0}
+                                            onChange={(e) => setEditTeacherData({
+                                                ...editTeacherData,
+                                                [teacher.id]: { ...editTeacherData[teacher.id], room_id: Number(e.target.value) }
+                                            })}
+                                            label="Select Room"
+                                        >
+                                            <MenuItem value={0} disabled>Select Room</MenuItem>
+                                            {rooms.map(room => (
+                                                <MenuItem key={room.id} value={room.id}>{room.name}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                    <FormControl fullWidth variant="outlined">
+                                        <InputLabel>Select Subject</InputLabel>
+                                        <Select
+                                            value={editTeacherData[teacher.id]?.subject_id || 0}
+                                            onChange={(e) => setEditTeacherData({
+                                                ...editTeacherData,
+                                                [teacher.id]: { ...editTeacherData[teacher.id], subject_id: Number(e.target.value) }
+                                            })}
+                                            label="Select Subject"
+                                        >
+                                            <MenuItem value={0} disabled>Select Subject</MenuItem>
+                                            {subjects.map(subject => (
+                                                <MenuItem key={subject.id} value={subject.id}>{subject.name}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                                        <Button variant="contained" color="primary" onClick={() => handleUpdateTeacher(teacher.id)}>
+                                            Save
+                                        </Button>
+                                        <Button variant="outlined" color="secondary" onClick={() => handleCancelClick(teacher.id)}>
+                                            Cancel
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            ) : (
+                                <>
+                                    <ListItemText
+                                        primary={`${teacher.first_name} ${teacher.last_name} ${teacher.middle_name}`}
+                                        secondary={`Room: ${rooms.find(room => room.id === teacher.room_id)?.name || 'N/A'}, Subject: ${subjects.find(subject => subject.id === teacher.subject_id)?.name || 'N/A'}`}
+                                    />
+                                    <ListItemSecondaryAction>
+                                        <IconButton onClick={() => handleEditClick(teacher.id)} color="primary">
+                                            <Edit />
+                                        </IconButton>
+                                        <IconButton onClick={() => handleDeleteTeacher(teacher.id)} color="secondary">
+                                            <Delete />
+                                        </IconButton>
+                                    </ListItemSecondaryAction>
+                                </>
+                            )}
+                        </ListItem>
+                    ))}
+                </List>
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 25, 50]}
+                    component="div"
+                    count={teachers.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                />
+            </Paper>
+        </Container>
     );
 };
 
